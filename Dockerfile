@@ -1,35 +1,52 @@
-FROM php:8.2-fpm
+FROM php:8.3-fpm
 
-# Install sistem dependency & ekstensi PHP yang dibutuhkan Laravel
+WORKDIR /var/www
+
 RUN apt-get update && apt-get install -y \
+    nginx \
     git \
-    curl \
+    unzip \
+    libpq-dev \
+    libzip-dev \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
+    curl \
+    && docker-php-ext-install \
+    pdo \
+    pdo_pgsql \
+    mbstring \
+    exif \
+    pcntl \
+    bcmath \
+    gd \
     zip \
-    unzip \
-    nginx
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Copy Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+COPY . .
 
-# Set working directory
-WORKDIR /var/www
+RUN composer install \
+    --no-dev \
+    --optimize-autoloader \
+    --no-interaction
 
-# Copy semua file project
-COPY . /var/www
+RUN npm install
 
-# Install dependency Laravel
-RUN composer install --no-dev --optimize-autoloader
+RUN php artisan storage:link || true
 
-# Set permission folder storage & cache
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+RUN chown -R www-data:www-data \
+    storage \
+    bootstrap/cache
 
-# Expose port
-EXPOSE 8000
+COPY docker/nginx.conf /etc/nginx/sites-available/default
 
-# Jalankan server
-CMD php artisan serve --host=0.0.0.0 --port=8000
+COPY docker/start.sh /start.sh
+
+RUN chmod +x /start.sh
+
+EXPOSE 10000
+
+CMD ["/start.sh"]
