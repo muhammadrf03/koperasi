@@ -8,6 +8,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Support\UrlCodec;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -25,6 +26,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Paksa HTTPS di production / environment Vercel serverless
+        if ($this->app->environment('production') || isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
+            URL::forceScheme('https');
+        }
+
         Route::bind('item', function (string $value) {
             return $this->resolveFromHash(Item::class, $value, withTrashed: true);
         });
