@@ -4,6 +4,6 @@ require __DIR__ . '/../../vendor/autoload.php';
 
 $app = require_once __DIR__ . '/../../bootstrap/app.php';
 
-use Bref\LaravelBridge\Http\NetlifyHandler;
+use Bref\LaravelBridge\Http\HttpHandler;
 
-return new NetlifyHandler($app);
+return new HttpHandler($app);
