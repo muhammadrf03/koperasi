@@ -1,0 +1,11 @@
+[build]
+  command = "php artisan config:cache"
+  publish = "public"
+
+[functions]
+  directory = "netlify/functions"
+
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/server"
+  status = 200
